@@ -1552,12 +1552,7 @@ void MPEG4Writer::writeMvhdBox(int64_t durationUs) {
 void MPEG4Writer::writeMoovBox(int64_t durationUs) {
     beginBox("moov");
     writeMvhdBox(durationUs);
-    
-    // [PATCH OPLUSHDR] Assure that "udta" can be written even without GPS if the Oplus data is present
-    const char *oplusData = nullptr;
-    bool hasOplusData = (mStartMeta != nullptr && mStartMeta->findCString(kKeyOplusUserData, &oplusData) && oplusData != nullptr);
-
-    if (mAreGeoTagsAvailable || hasOplusData) {
+    if (mAreGeoTagsAvailable) {
         writeUdtaBox();
     }
     writeMoovLevelMetaBox();
@@ -5534,19 +5529,7 @@ void MPEG4Writer::Track::writeCo64Box() {
 
 void MPEG4Writer::writeUdtaBox() {
     beginBox("udta");
-    
-    if (mAreGeoTagsAvailable) {
-        writeGeoDataBox();
-    }
-
-    // [PATCH OPLUSHDR] Custom Atom Creation for Gallery/Lenses/HDR
-    const char *oplusData = nullptr;
-    if (mStartMeta != nullptr && mStartMeta->findCString(kKeyOplusUserData, &oplusData) && oplusData != nullptr) {
-        beginBox("oplu");
-        writeCString(oplusData);
-        endBox();
-    }
-
+    writeGeoDataBox();
     endBox();
 }
 
