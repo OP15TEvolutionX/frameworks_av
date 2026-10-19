@@ -516,6 +516,16 @@ void CameraService::addStates(const std::string& cameraId) {
     for (size_t i = 0; i < cost.conflictingDevices.size(); i++) {
         conflicting.emplace(cost.conflictingDevices[i]);
     }
+    // A logical camera streams from its physical cameras. Some HALs also expose
+    // those physical cameras as standalone devices without listing them as
+    // conflicting, which lets two clients drive the same sensor at once and can
+    // deadlock the HAL. Treat them as conflicting so the lower priority client
+    // is evicted (the check is symmetric, so one side is enough).
+    for (const auto& physicalId : physicalCameraIds) {
+        if (physicalId != cameraId) {
+            conflicting.emplace(physicalId);
+        }
+    }
 
     {
         Mutex::Autolock lock(mCameraStatesLock);
